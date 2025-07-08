@@ -1,0 +1,103 @@
+version: '3'
+services:
+  orders-service:
+    build: ./service-order
+    ports:
+      - '3002:3002'
+    depends_on:
+      - kafka
+      - redis
+    environment:
+      - TZ=Asia/Ho_Chi_Minh
+      - KAFKA_BROKER=kafka:9092
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - CORS_ORIGIN=http://localhost:3003
+    networks:
+      - app-network
+
+  payments-service:
+    build: ./service-payment
+    ports:
+      - '3001:3001'
+    depends_on:
+      - kafka
+      - redis
+    environment:
+      - TZ=Asia/Ho_Chi_Minh
+      - KAFKA_BROKERS=kafka:9092
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - KAFKAJS_NO_PARTITIONER_WARNING=1
+    networks:
+      - app-network
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    ports:
+      - '2181:2181'
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+    networks:
+      - app-network
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    ports:
+      - '9092:9092'
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - app-network
+
+  create-topics:
+    image: bitnami/kafka:latest
+    depends_on:
+      - kafka
+    entrypoint: ["bash", "-c", "/tmp/create-topics.sh"]
+    volumes:
+      - ./create-topics.sh:/tmp/create-topics.sh
+    environment:
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092
+      - ALLOW_PLAINTEXT_LISTENER=yes
+    networks:
+      - app-network
+
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - '6379:6379'
+    environment:
+      - REDIS_LOGLEVEL=debug
+      - TZ=Asia/Ho_Chi_Minh
+    volumes:
+      - redis-data:/data
+    networks:
+      - app-network
+
+  # order-worker:
+  #   build: ./service-order
+  #   command: npm run worker
+  #   depends_on:
+  #     - redis
+  #   environment:
+  #     - REDIS_HOST=redis
+  #     - REDIS_PORT=6379
+  #     - TZ=Asia/Ho_Chi_Minh
+  #   networks:
+  #     - app-network
+
+volumes:
+  redis-data:
+
+networks:
+  app-network:
+    driver: bridge
