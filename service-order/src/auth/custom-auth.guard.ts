@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  CanActivate,
-  ExecutionContext,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { Request } from 'express';
 
 @Injectable()
@@ -13,11 +8,11 @@ export class CustomAuthGuard implements CanActivate {
 
     const authHeader = req.headers['authorization'];
 
-    if (!authHeader || !authHeader.startsWith('Custom ')) {
-      throw new UnauthorizedException('Custom token required');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      throw new UnauthorizedException('Bearer token required');
     }
 
-    const token = authHeader.replace('Custom ', '').trim();
+    const token = authHeader.replace('Bearer ', '').trim();
 
     if (!this.validateToken(token)) {
       throw new UnauthorizedException('Invalid token');

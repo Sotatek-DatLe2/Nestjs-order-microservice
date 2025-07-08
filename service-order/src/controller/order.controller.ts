@@ -6,7 +6,6 @@ import {
   Query,
   UsePipes,
   ValidationPipe,
-  UseInterceptors,
   UseFilters,
   Put,
   UseGuards,
@@ -14,12 +13,10 @@ import {
 } from '@nestjs/common';
 import { OrderService } from '../models/Order/order.service';
 import { CreateOrderDto } from '../models/Order/DTO/create-order.dto';
-import { PaginationQueryDto } from '../models/Order/DTO/pagination-query.dto';
 import { HttpExceptionFilter } from '../common/filters/http-exception.filter';
 import { FilterOptions } from 'src/util/filter.interface';
 import { UpdateOrderStatusDto } from 'src/models/Order/DTO/update-order-status.dto';
 import { CustomAuthGuard } from 'src/auth/custom-auth.guard';
-import { Order } from 'src/models/Order/order.entity';
 import { OrderStatus } from 'src/common/order.enum';
 
 @Controller('orders')
@@ -72,16 +69,19 @@ export class OrderController {
   }
 
   @UseGuards(CustomAuthGuard)
-  @Put()
+  @Put(':id')
   @UsePipes(new ValidationPipe({ whitelist: true }))
-  async updateOrder(@Body() updateOrderDto: UpdateOrderStatusDto) {
-    if (!updateOrderDto.id) {
+  async updateOrder(
+    @Param('id') id: string,
+    @Body(new ValidationPipe({ whitelist: true, transform: true }))
+    body: UpdateOrderStatusDto,
+  ) {
+    if (!id) {
       throw new Error('Order ID is required for update');
     }
-    return this.orderService.updateOrderStatus(
-      updateOrderDto,
-      updateOrderDto.status,
-      updateOrderDto.reason || 'No reason provided',
-    );
+
+    const { status, reason } = body;
+
+    return this.orderService.updateOrderStatus(body, status, reason || 'No reason provided');
   }
 }

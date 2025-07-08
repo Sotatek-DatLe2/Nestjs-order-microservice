@@ -5,7 +5,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, DataSource, DeepPartial, ILike } from 'typeorm';
+import { Repository, DataSource, DeepPartial, ILike, Between } from 'typeorm';
 import { plainToClass } from 'class-transformer';
 import { Order } from './order.entity';
 import { OrderHistory } from '../OrderHistory/orderHistory.entity';
@@ -159,8 +159,8 @@ export class OrderRepository {
       where.status = filter.status;
     }
 
-    if (filter?.createdAt) {
-      where.createdAt = filter.createdAt;
+    if (filter?.dateRange) {
+      where.createdAt = Between(filter.dateRange.start, filter.dateRange.end);
     }
 
     if (filter?.search) {
