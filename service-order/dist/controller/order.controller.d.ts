@@ -1,7 +1,7 @@
 import { OrderService } from '../models/Order/order.service';
 import { CreateOrderDto } from '../models/Order/DTO/create-order.dto';
 import { PaginationQueryDto } from '../models/Order/DTO/pagination-query.dto';
-import { UpdateOrderStatusDto } from 'src/models/Order/DTO/update-order-status.dto';
+import { UpdateOrderStatusDto } from '../models/Order/DTO/update-order-status.dto';
 export declare class OrderController {
     private readonly orderService;
     constructor(orderService: OrderService);

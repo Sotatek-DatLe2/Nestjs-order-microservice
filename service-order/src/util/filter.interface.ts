@@ -1,4 +1,4 @@
-import { OrderStatus } from "src/common/order.enum";
+import { OrderStatus } from "../common/order.enum";
 
 export interface FilterOptions {
   search?: string;

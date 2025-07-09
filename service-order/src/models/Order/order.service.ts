@@ -1,15 +1,14 @@
 import { Injectable, BadRequestException, NotFoundException, Logger } from '@nestjs/common';
-import { HttpService } from '@nestjs/axios';
 import { OrderRepository } from './order.repository';
 import { CreateOrderDto } from './DTO/create-order.dto';
 import { UpdateOrderStatusDto } from './DTO/update-order-status.dto';
 import { FilterOptions } from 'src/util/filter.interface';
-import { OrderStatus, PaymentStatus } from 'src/common/order.enum';
+import { OrderStatus} from '../../common/order.enum';
 import { DashboardGateway } from '../../socket/dashboard.gateway';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
-import { KafkaProducerService } from 'src/kafka/producer.service';
-import { PaymentDetails } from 'src/kafka/types/payment-verified-payload';
+import { KafkaProducerService } from '../../kafka/producer.service';
+import { PaymentDetails } from '../../kafka/types/payment-verified-payload';
 
 @Injectable()
 export class OrderService {

@@ -2,8 +2,8 @@ import { HttpService } from '@nestjs/axios';
 import { OrderRepository } from './order.repository';
 import { CreateOrderDto } from './DTO/create-order.dto';
 import { UpdateOrderStatusDto } from './DTO/update-order-status.dto';
-import { FilterOptions } from 'src/util/filter.interface';
-import { OrderStatus } from 'src/common/order.enum';
+import { FilterOptions } from '../../util/filter.interface';
+import { OrderStatus } from '../../common/order.enum';
 import { Queue } from 'bullmq';
 export declare class OrderService {
     private readonly orderRepository;

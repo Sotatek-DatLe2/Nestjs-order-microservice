@@ -1,8 +1,8 @@
 import { Processor, WorkerHost } from '@nestjs/bullmq';
 import { Job } from 'bullmq';
 import { OrderRepository } from '../models/Order/order.repository';
-import { OrderStatus } from 'src/common/order.enum';
-import { DashboardGateway } from 'src/socket/dashboard.gateway';
+import { OrderStatus } from '../common/order.enum';
+import { DashboardGateway } from '../socket/dashboard.gateway';
 
 @Processor('order-status-delivered')
 export class OrderProcessor extends WorkerHost {

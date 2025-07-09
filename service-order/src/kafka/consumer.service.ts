@@ -5,7 +5,7 @@ import { OrderService } from '../models/Order/order.service';
 import { KafkaTopics } from '../kafka/kafka-topics';
 import { PaymentVerifiedEvent, PaymentStatus } from './types/payment-verified-event';
 import { UpdateOrderStatusDto } from 'src/models/Order/DTO/update-order-status.dto';
-import { OrderStatus } from 'src/common/order.enum';
+import { OrderStatus } from '../common/order.enum';
 import { DashboardGateway } from '../socket/dashboard.gateway';
 
 @Injectable()

@@ -1,6 +1,5 @@
 import { Type } from 'class-transformer';
 import { IsOptional, IsInt, Min, ValidateNested } from 'class-validator';
-import { OrderStatus } from 'src/common/order.enum';
 
 export class PaginationQueryDto {
   @IsOptional()

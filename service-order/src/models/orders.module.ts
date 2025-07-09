@@ -7,10 +7,10 @@ import { OrderService } from './Order/order.service';
 import { OrderController } from '../controller/order.controller';
 import { HttpModule } from '@nestjs/axios';
 import { BullModule } from '@nestjs/bullmq';
-import { OrderProcessor } from 'src/util/order.processor';
+import { OrderProcessor } from '../util/order.processor';
 import { OrderRepository } from './Order/order.repository';
 import { KafkaModule } from '../kafka/kafka.module';
-import { DashboardGateway } from 'src/socket/dashboard.gateway';
+import { DashboardGateway } from '../socket/dashboard.gateway';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Order, OrderHistory]),

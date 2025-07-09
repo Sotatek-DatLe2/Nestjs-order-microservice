@@ -14,10 +14,10 @@ import {
 import { OrderService } from '../models/Order/order.service';
 import { CreateOrderDto } from '../models/Order/DTO/create-order.dto';
 import { HttpExceptionFilter } from '../common/filters/http-exception.filter';
-import { FilterOptions } from 'src/util/filter.interface';
-import { UpdateOrderStatusDto } from 'src/models/Order/DTO/update-order-status.dto';
-import { CustomAuthGuard } from 'src/auth/custom-auth.guard';
-import { OrderStatus } from 'src/common/order.enum';
+import { FilterOptions } from '../util/filter.interface';
+import { UpdateOrderStatusDto } from '../models/Order/DTO/update-order-status.dto';
+import { CustomAuthGuard } from '../auth/custom-auth.guard';
+import { OrderStatus } from '../common/order.enum';
 
 @Controller('orders')
 @UseFilters(HttpExceptionFilter)
