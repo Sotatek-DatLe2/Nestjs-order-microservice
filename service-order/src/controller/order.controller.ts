@@ -10,6 +10,7 @@ import {
   Put,
   UseGuards,
   Param,
+  Delete,
 } from '@nestjs/common';
 import { OrderService } from '../models/Order/order.service';
 import { CreateOrderDto } from '../models/Order/DTO/create-order.dto';
@@ -28,6 +29,15 @@ export class OrderController {
   @UsePipes(new ValidationPipe({ whitelist: true }))
   async createOrder(@Body() createOrderDto: CreateOrderDto) {
     return this.orderService.createOrder(createOrderDto);
+  }
+
+  @Delete(':id')
+  @UsePipes(new ValidationPipe({ transform: true }))
+  async deleteOrder(@Param('id') id: string) {
+    if (!id) {
+      throw new Error('Order ID is required for deletion');
+    }
+    return this.orderService.deleteOrder(id);
   }
 
   @Get()

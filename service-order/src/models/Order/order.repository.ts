@@ -66,6 +66,30 @@ export class OrderRepository {
     return this.transform(order);
   }
 
+  async delete(id: string): Promise<void> {
+    const queryRunner = this.dataSource.createQueryRunner();
+    return queryRunner.manager
+      .transaction(async (manager) => {
+        const order = await manager.findOne(Order, { where: { id } });
+        if (!order) {
+          throw new NotFoundException(`Order with ID ${id} not found.`);
+        }
+
+        // Delete all history entries for the order
+        await manager.delete(OrderHistory, { order });
+
+        // Delete the order itself
+        await manager.delete(Order, { id });
+      })
+      .then(() => {
+        this.logger.log(`Order with ID ${id} deleted successfully.`);
+      })
+      .catch((error) => {
+        this.logger.error(`Failed to delete order with ID ${id}:`, error?.message || error);
+        throw new InternalServerErrorException(`Failed to delete order with ID ${id}`);
+      });
+  }
+
   async createEntity(inputs: DeepPartial<Order>): Promise<OrderSerializer> {
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();

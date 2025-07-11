@@ -32,4 +32,9 @@ export class DashboardGateway {
     this.logger.log(`Emitting orderUpdated: ${order.id}`);
     this.server.emit('orderUpdated', order);
   }
+
+  emitOrderDeleted(order: any) {
+    this.logger.log(`Emitting orderDeleted: ${order.id}`);
+    this.server.emit('orderDeleted', order);
+  }
 }

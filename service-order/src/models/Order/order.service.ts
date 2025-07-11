@@ -125,4 +125,14 @@ export class OrderService {
       },
     };
   }
+
+  async deleteOrder(id: string) {
+    const order = await this.orderRepository.get(id);
+    if (!order) {
+      throw new NotFoundException(`Order with id ${id} not found`);
+    }
+    await this.orderRepository.delete(id);
+    this.dashboardGateway.emitOrderDeleted(order);
+    return { message: `Order with id ${id} deleted successfully` };
+  }
 }

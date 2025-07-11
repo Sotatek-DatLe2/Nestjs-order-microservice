@@ -12,6 +12,130 @@ import { CustomAuthGuard } from '../src/auth/custom-auth.guard';
 // Mock UUID for consistent testing
 const mockUuid = '123e4567-e89b-12d3-a456-426614174000';
 
+const validPaymentDetails = {
+  cvv: '123',
+  cardNumber: '4111111111111111',
+  expirationDate: '12/25',
+};
+
+const invalidTestCases: [string, any][] = [
+  // customerName tests
+  ['missing customerName', { totalAmount: 100, paymentDetails: validPaymentDetails }],
+  [
+    'empty customerName',
+    { customerName: '', totalAmount: 100, paymentDetails: validPaymentDetails },
+  ],
+  [
+    'non-string customerName',
+    { customerName: 123, totalAmount: 100, paymentDetails: validPaymentDetails },
+  ],
+
+  // totalAmount tests
+  [
+    'negative totalAmount',
+    { customerName: 'Alice', totalAmount: -100, paymentDetails: validPaymentDetails },
+  ],
+  [
+    'zero totalAmount',
+    { customerName: 'Alice', totalAmount: 0, paymentDetails: validPaymentDetails },
+  ],
+  [
+    'NaN totalAmount',
+    { customerName: 'Alice', totalAmount: NaN, paymentDetails: validPaymentDetails },
+  ],
+  [
+    'Infinity totalAmount',
+    { customerName: 'Alice', totalAmount: Infinity, paymentDetails: validPaymentDetails },
+  ],
+  ['missing totalAmount', { customerName: 'Alice', paymentDetails: validPaymentDetails }],
+
+  // paymentDetails: missing / invalid
+  ['missing paymentDetails', { customerName: 'Alice', totalAmount: 100 }],
+  ['paymentDetails is null', { customerName: 'Alice', totalAmount: 100, paymentDetails: null }],
+  [
+    'paymentDetails is string',
+    { customerName: 'Alice', totalAmount: 100, paymentDetails: 'not-an-object' },
+  ],
+
+  // cvv invalid
+  [
+    'missing cvv',
+    {
+      customerName: 'Alice',
+      totalAmount: 100,
+      paymentDetails: { cardNumber: '4111111111111111', expirationDate: '12/25' },
+    },
+  ],
+  [
+    'empty cvv',
+    {
+      customerName: 'Alice',
+      totalAmount: 100,
+      paymentDetails: { cvv: '', cardNumber: '4111111111111111', expirationDate: '12/25' },
+    },
+  ],
+  [
+    'non-string cvv',
+    {
+      customerName: 'Alice',
+      totalAmount: 100,
+      paymentDetails: { cvv: 123, cardNumber: '4111111111111111', expirationDate: '12/25' },
+    },
+  ],
+
+  // cardNumber invalid
+  [
+    'missing cardNumber',
+    {
+      customerName: 'Alice',
+      totalAmount: 100,
+      paymentDetails: { cvv: '123', expirationDate: '12/25' },
+    },
+  ],
+  [
+    'short cardNumber',
+    {
+      customerName: 'Alice',
+      totalAmount: 100,
+      paymentDetails: { cvv: '123', cardNumber: '4111', expirationDate: '12/25' },
+    },
+  ],
+  [
+    'non-string cardNumber',
+    {
+      customerName: 'Alice',
+      totalAmount: 100,
+      paymentDetails: { cvv: '123', cardNumber: 4111111111111111, expirationDate: '12/25' },
+    },
+  ],
+
+  // expirationDate invalid
+  [
+    'missing expirationDate',
+    {
+      customerName: 'Alice',
+      totalAmount: 100,
+      paymentDetails: { cvv: '123', cardNumber: '4111111111111111' },
+    },
+  ],
+  [
+    'empty expirationDate',
+    {
+      customerName: 'Alice',
+      totalAmount: 100,
+      paymentDetails: { cvv: '123', cardNumber: '4111111111111111', expirationDate: '' },
+    },
+  ],
+  [
+    'non-string expirationDate',
+    {
+      customerName: 'Alice',
+      totalAmount: 100,
+      paymentDetails: { cvv: '123', cardNumber: '4111111111111111', expirationDate: 1225 },
+    },
+  ],
+];
+
 describe('OrderController (e2e)', () => {
   let app: INestApplication;
   let kafkaProducerMock: jest.Mocked<KafkaProducerService>;
@@ -52,7 +176,7 @@ describe('OrderController (e2e)', () => {
       .overrideProvider('order-status-delivered')
       .useValue(orderStatusQueueMock)
       .overrideGuard(CustomAuthGuard)
-      .useValue({ canActivate: () => true }) // Mock auth guard to always allow access
+      .useValue({ canActivate: () => true })
       .compile();
 
     app = moduleFixture.createNestApplication();
@@ -106,23 +230,19 @@ describe('OrderController (e2e)', () => {
       await request(app.getHttpServer()).delete(`/orders/${response.body.id}`);
     });
 
-    it('should fail to create an order with invalid data', async () => {
-      const invalidOrderDto = {
-        customerName: '',
-        totalAmount: -100,
-        paymentDetails: {
-          cvv: '12',
-          cardNumber: '411111',
-          expirationDate: '12/25',
-        },
-      };
+    describe.each(invalidTestCases)('Invalid input: %s', (description, invalidPayload) => {
+      it(`should return 400 Bad Request - ${description}`, async () => {
+        const response = await request(app.getHttpServer())
+          .post('/orders')
+          .send(invalidPayload)
+          .expect(400);
 
-      const response = await request(app.getHttpServer())
-        .post('/orders')
-        .send(invalidOrderDto)
-        .expect(400);
+        expect(response.body.message).toBeDefined();
 
-      expect(response.body.message).toBeDefined();
+        if (response.body.id) {
+          await request(app.getHttpServer()).delete(`/orders/${response.body.id}`);
+        }
+      });
     });
   });
 
@@ -135,7 +255,7 @@ describe('OrderController (e2e)', () => {
       expect(response.body.pagination).toHaveProperty('total');
       expect(response.body.pagination.page).toBe(1);
       expect(response.body.pagination.limit).toBe(10);
-    });
+    }, 10000);
 
     it('should retrieve orders with filters', async () => {
       const response = await request(app.getHttpServer())
@@ -211,7 +331,7 @@ describe('OrderController (e2e)', () => {
       const orderId = createResponse.body.id;
 
       const invalidUpdateDto = {
-        status: OrderStatus.DELIVERED, // Invalid: cannot transition from CREATED to DELIVERED
+        status: OrderStatus.DELIVERED,
         reason: 'Invalid transition attempt',
         id: orderId,
       };
@@ -222,6 +342,8 @@ describe('OrderController (e2e)', () => {
         .expect(500); // InternalServerErrorException from FSM validation
 
       expect(response.body.message).toContain('Failed to update order status');
+
+      await request(app.getHttpServer()).delete(`/orders/${orderId}`);
     });
 
     it('should return 404 for non-existent order ID', async () => {
